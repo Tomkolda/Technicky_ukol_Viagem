@@ -1,0 +1,1 @@
+Aplikace má za úkol zobrazit parcely v okresu Jičín
