@@ -73,3 +73,25 @@ Výkon: od jakého přiblížení zobrazovat parcely
 - Zvolil jsem jednodušší řešení (SQLite, GeoJSON, Leaflet), protože pro 5 katastrálních území stačí a dá se rychle postavit a změřit.
 - Slabina: při posunu mapy se parcely načítají znovu, i ty, které už byly vidět.
 - S víc časem / pro celý okres: vektorové dlaždice (MVT) z PostGIS s cache na disku. Dlaždice se načtou jen jednou a data se mění jen jednou měsíčně.
+
+# Převod dat (ogr2ogr)
+Soubor VFR jde otevřít v QGIS i v `ogr2ogr` přes obecný GML ovladač (speciální VFR ovladač v GDAL 3.13 není).
+**Problém:** vrstva Parcely má tři geometrie – `DefinicniBod` (bod), `OriginalniHranice` (polygon) a `OriginalniHraniceOmpv` (multipolygon). QGIS nabízí jen první z nich, takže se parcely zobrazily jako body.
+**Řešení:** převod přes `ogr2ogr` do GeoPackage, kde se v `-select` uvede jen geometrie `OriginalniHranice`:
+    ogr2ogr -f GPKG data\parcely.gpkg data\20260930_OB_572659_UKSH.xml Parcely -select "OriginalniHranice,Id,KmenoveCislo,PododdeleniCisla,DruhCislovaniKod,VymeraParcely,DruhPozemkuKod,ZpusobyVyuzitiPozemku,KatastralniUzemiKod" -nln parcely
+- Výsledek: 16 953 parcel jako polygony, soubor 6 MB (původní XML 36 MB).
+- Nad podkladem OpenStreetMap parcely sedí na domy a ulice, takže souřadnice jsou v pořádku.
+- Zatím nevyřešeno: co znamená `OriginalniHraniceOmpv` a jestli ji můžu ignorovat. BPEJ (`BonitovanyDil…`) zatím nepřevádím, protože jde o seznamy hodnot.
+
+# Ověření dat proti katastru
+Ověřeno na parcele **st. 77, k. ú. Jičín** (Valdštejnovo náměstí) v Nahlížení do KN:
+- výměra 509 m² – sedí
+- druh pozemku kód 13 = „zastavěná plocha a nádvoří“ – sedí
+Co z toho plyne pro aplikaci:
+- číslo parcely je potřeba sestavit z `DruhCislovaniKod` (1 = stavební, „st.“), `KmenoveCislo` a `PododdeleniCisla` (za lomítkem)
+- parcela č. 77 a st. 77 jsou dvě různé parcely ve stejném k. ú.
+- některé hodnoty chybí (např. způsob využití je NULL), aplikace s tím musí počítat
+
+# Převod kódů na text (číselníky)
+**Rozhodnutí:** kódy (druh pozemku, způsob využití) převádím pomocí oficiálních číselníků ČÚZK, které naimportuji do databáze.
+**Proč:** jde o oficiální zdroj, nemusím hodnoty ručně přepisovat (riziko překlepu) a při změně číselníku stačí stáhnout novou verzi bez úpravy kódu.
