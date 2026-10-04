@@ -75,6 +75,7 @@ Výkon: od jakého přiblížení zobrazovat parcely
 - S víc časem / pro celý okres: vektorové dlaždice (MVT) z PostGIS s cache na disku. Dlaždice se načtou jen jednou a data se mění jen jednou měsíčně.
 
 # Převod dat (ogr2ogr)
+
 Soubor VFR jde otevřít v QGIS i v `ogr2ogr` přes obecný GML ovladač (speciální VFR ovladač v GDAL 3.13 není).
 **Problém:** vrstva Parcely má tři geometrie – `DefinicniBod` (bod), `OriginalniHranice` (polygon) a `OriginalniHraniceOmpv` (multipolygon). QGIS nabízí jen první z nich, takže se parcely zobrazily jako body.
 **Řešení:** převod přes `ogr2ogr` do GeoPackage, kde se v `-select` uvede jen geometrie `OriginalniHranice`:
@@ -84,6 +85,7 @@ Soubor VFR jde otevřít v QGIS i v `ogr2ogr` přes obecný GML ovladač (speci�
 - Zatím nevyřešeno: co znamená `OriginalniHraniceOmpv` a jestli ji můžu ignorovat. BPEJ (`BonitovanyDil…`) zatím nepřevádím, protože jde o seznamy hodnot.
 
 # Ověření dat proti katastru
+
 Ověřeno na parcele **st. 77, k. ú. Jičín** (Valdštejnovo náměstí) v Nahlížení do KN:
 - výměra 509 m² – sedí
 - druh pozemku kód 13 = „zastavěná plocha a nádvoří“ – sedí
@@ -93,10 +95,12 @@ Co z toho plyne pro aplikaci:
 - některé hodnoty chybí (např. způsob využití je NULL), aplikace s tím musí počítat
 
 # Převod kódů na text (číselníky)
+
 **Rozhodnutí:** kódy (druh pozemku, způsob využití) převádím pomocí oficiálních číselníků ČÚZK, které naimportuji do databáze.
 **Proč:** jde o oficiální zdroj, nemusím hodnoty ručně přepisovat (riziko překlepu) a při změně číselníku stačí stáhnout novou verzi bez úpravy kódu.¨
 
 # Struktura projektu
+
     public/      – document root: index.html, app.js, style.css, api.php
     src/         – PHP třídy (mimo document root)
     config.php   – konfigurace (mimo document root)
@@ -105,3 +109,20 @@ Co z toho plyne pro aplikaci:
 **Rozhodnutí 2: frontend i API obsluhuje jeden server (`php -S localhost:8000 -t public`).**
 **Proč:** kdyby frontend a API běžely na různých adresách nebo portech, prohlížeč by požadavky na API blokoval (CORS) a musel bych na serveru nastavovat povolující hlavičky. Vestavěný PHP server statické soubory (HTML, JS, CSS) posílá sám a PHP soubory spouští, takže stačí jedna adresa.
 **Zvažoval jsem:** oddělené složky `backend/` a `frontend/`. Pro takhle malý projekt by to bylo zbytečné zanořování.
+
+# Návrh databáze (SQLite)
+
+Schéma je v `scripts/schema.sql`. Tabulky:
+
+- `parcely` – atributy parcely, geometrie jako GeoJSON (WGS84), ohraničující obdélník a definiční bod
+- `druhy_pozemku`, `zpusoby_vyuziti`, `katastralni_uzemi` – číselníky (`kod`, `nazev`)
+
+**Primární klíč parcely:** `Id` z RÚIAN. Je jednoznačné v celé ČR, na rozdíl od čísla parcely, které se opakuje v různých k. ú. a liší se jen druhem číslování (77 vs. st. 77).
+
+**Jen potřebné sloupce:** interní údaje ČÚZK (`IdTransakce`, `RizeniId`, `PlatiOd`) neukládám, aplikace je nepotřebuje.
+
+**Geometrie jako GeoJSON text:** SQLite nemá typ pro polygony. GeoJSON umí prohlížeč i Leaflet přečíst přímo, takže ho PHP pošle bez převádění.
+
+**Číselníky – každý ve vlastní tabulce:** původně jsem je dal do jedné tabulky, ale jsou to tři nezávislé seznamy s různým počtem položek, takže by jeden řádek míchal nesouvisející údaje (normalizace). Primárním klíčem je přímo `kod`, takže se kód nemůže opakovat.
+
+**Číslo parcely skládám v PHP, neukládám ho:** je odvozené z `druh_cislovani`, `kmenove_cislo` a `pododdeleni`. 
