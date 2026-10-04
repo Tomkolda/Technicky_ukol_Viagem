@@ -1,6 +1,7 @@
 'use strict';
 
 const MIN_ZOOM_PARCEL = 16;
+const MIN_ZOOM_POPISKU = 18;
 const STRED_JICINA = [50.437, 15.352];
 const NAHLIZENI_DO_KN = 'https://nahlizenidokn.cuzk.gov.cz/ZobrazObjekt.aspx';
 
@@ -32,6 +33,27 @@ const vrstvaVybrane = L.geoJSON(null, {
     style: { color: '#1565c0', weight: 3, fillOpacity: 0.25 },
 }).addTo(mapa);
 
+const vrstvaPopisku = L.layerGroup().addTo(mapa);
+
+function zobrazPopisky(parcely) {
+    vrstvaPopisku.clearLayers();
+    if (mapa.getZoom() < MIN_ZOOM_POPISKU) {
+        return;
+    }
+
+    for (const parcela of parcely.features) {
+        const [lon, lat] = parcela.properties.bod;
+        const text = document.createElement('span');
+        text.textContent = parcela.properties.cislo;
+
+        L.marker([lat, lon], {
+            interactive: false,
+            keyboard: false,
+            icon: L.divIcon({ className: 'popisek', html: text, iconSize: null }),
+        }).addTo(vrstvaPopisku);
+    }
+}
+
 const hlaska = document.getElementById('hlaska');
 let probihajiciNacitani = null;
 
@@ -42,6 +64,7 @@ async function nactiParcely() {
     hlaska.hidden = jeDostatecnePriblizeno;
     if (!jeDostatecnePriblizeno) {
         vrstvaParcel.clearLayers();
+        vrstvaPopisku.clearLayers();
         return;
     }
 
@@ -63,6 +86,7 @@ async function nactiParcely() {
         const parcely = await odpoved.json();
         vrstvaParcel.clearLayers();
         vrstvaParcel.addData(parcely);
+        zobrazPopisky(parcely);
     } catch (chyba) {
         if (chyba.name !== 'AbortError') {
             console.error('Načtení parcel selhalo:', chyba);

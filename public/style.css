@@ -35,3 +35,12 @@ body {
     display: inline-block;
     margin-top: 6px;
 }
+
+.popisek span {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    white-space: nowrap;
+    color: #222;
+    text-shadow: 0 0 2px white, 0 0 2px white, 0 0 2px white;
+}

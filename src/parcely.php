@@ -64,7 +64,7 @@ function najdiParceluVBode(PDO $db, float $lon, float $lat): ?array
 function sestavGeoJsonVyrezu(PDO $db, float $zapad, float $jih, float $vychod, float $sever): string
 {
     $prikaz = $db->prepare(
-        'SELECT id, druh_cislovani, kmenove_cislo, pododdeleni, geometrie
+        'SELECT id, druh_cislovani, kmenove_cislo, pododdeleni, geometrie, bod_lon, bod_lat
          FROM parcely
          WHERE min_lon <= :vychod AND max_lon >= :zapad
            AND min_lat <= :sever AND max_lat >= :jih'
@@ -79,6 +79,7 @@ function sestavGeoJsonVyrezu(PDO $db, float $zapad, float $jih, float $vychod, f
                 (int) $parcela['kmenove_cislo'],
                 $parcela['pododdeleni'] !== null ? (int) $parcela['pododdeleni'] : null
             ),
+            'bod' => [(float) $parcela['bod_lon'], (float) $parcela['bod_lat']],
         ];
 
         $prvky[] = '{"type":"Feature","id":' . (int) $parcela['id']
