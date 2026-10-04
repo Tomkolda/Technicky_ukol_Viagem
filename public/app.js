@@ -94,11 +94,9 @@ function zobrazDetail(misto, parcela) {
     odkaz.target = '_blank';
     odkaz.rel = 'noopener';
     odkaz.textContent = 'Zobrazit v Nahlížení do KN (vlastníci, LV)';
-    
+    L.popup().setLatLng(misto).setContent(obsah).openOn(mapa);
     vrstvaVybrane.clearLayers();
     vrstvaVybrane.addData(parcela.geometrie);
-
-    L.popup().setLatLng(misto).setContent(obsah).openOn(mapa);
 }
 
 async function nactiDetail(udalost) {
