@@ -94,4 +94,14 @@ Co z toho plyne pro aplikaci:
 
 # Převod kódů na text (číselníky)
 **Rozhodnutí:** kódy (druh pozemku, způsob využití) převádím pomocí oficiálních číselníků ČÚZK, které naimportuji do databáze.
-**Proč:** jde o oficiální zdroj, nemusím hodnoty ručně přepisovat (riziko překlepu) a při změně číselníku stačí stáhnout novou verzi bez úpravy kódu.
+**Proč:** jde o oficiální zdroj, nemusím hodnoty ručně přepisovat (riziko překlepu) a při změně číselníku stačí stáhnout novou verzi bez úpravy kódu.¨
+
+# Struktura projektu
+    public/      – document root: index.html, app.js, style.css, api.php
+    src/         – PHP třídy (mimo document root)
+    config.php   – konfigurace (mimo document root)
+    scripts/     – import dat
+    data/        – stažená data a databáze SQLite (v .gitignore)
+**Rozhodnutí 2: frontend i API obsluhuje jeden server (`php -S localhost:8000 -t public`).**
+**Proč:** kdyby frontend a API běžely na různých adresách nebo portech, prohlížeč by požadavky na API blokoval (CORS) a musel bych na serveru nastavovat povolující hlavičky. Vestavěný PHP server statické soubory (HTML, JS, CSS) posílá sám a PHP soubory spouští, takže stačí jedna adresa.
+**Zvažoval jsem:** oddělené složky `backend/` a `frontend/`. Pro takhle malý projekt by to bylo zbytečné zanořování.
