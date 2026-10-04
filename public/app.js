@@ -24,6 +24,14 @@ const vrstvaParcel = L.geoJSON(null, {
     style: { color: '#d33', weight: 1, fillOpacity: 0.05 },
 }).addTo(mapa);
 
+mapa.createPane('vybranaParcela').style.zIndex = 450;
+
+const vrstvaVybrane = L.geoJSON(null, {
+    pane: 'vybranaParcela',
+    interactive: false,
+    style: { color: '#1565c0', weight: 3, fillOpacity: 0.25 },
+}).addTo(mapa);
+
 const hlaska = document.getElementById('hlaska');
 let probihajiciNacitani = null;
 
@@ -86,10 +94,15 @@ function zobrazDetail(misto, parcela) {
     odkaz.target = '_blank';
     odkaz.rel = 'noopener';
     odkaz.textContent = 'Zobrazit v Nahlížení do KN (vlastníci, LV)';
+    
+    vrstvaVybrane.clearLayers();
+    vrstvaVybrane.addData(parcela.geometrie);
+
     L.popup().setLatLng(misto).setContent(obsah).openOn(mapa);
 }
 
 async function nactiDetail(udalost) {
+    vrstvaVybrane.clearLayers();
     const parametry = new URLSearchParams({
         akce: 'detail',
         lon: udalost.latlng.lng,
@@ -111,4 +124,5 @@ async function nactiDetail(udalost) {
 
 mapa.on('moveend', nactiParcely);
 mapa.on('click', nactiDetail);
+mapa.on('popupclose', () => vrstvaVybrane.clearLayers());
 nactiParcely();

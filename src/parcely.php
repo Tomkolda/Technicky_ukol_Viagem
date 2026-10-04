@@ -54,6 +54,7 @@ function najdiParceluVBode(PDO $db, float $lon, float $lat): ?array
             'vymera' => (int) $parcela['vymera'],
             'druh_pozemku' => $parcela['druh_pozemku'],
             'zpusob_vyuziti' => $parcela['zpusob_vyuziti'],
+            'geometrie' => $geometrie,
         ];
     }
 
