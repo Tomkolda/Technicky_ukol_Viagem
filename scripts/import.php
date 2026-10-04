@@ -39,7 +39,7 @@ $db = pripojDatabazi($config['db_path']);
 $db->exec(file_get_contents(__DIR__ . '/schema.sql'));
 
 $druhyPozemku = importujCsv($db, __DIR__ . '/../data/SC_D_POZEMKU.csv', 'druhy_pozemku', 'CP1250', ';');
-$pouzitiPozemku = importujCsv($db, __DIR__ . '/../data/SC_D_POZEMKU.csv', 'zpusoby_vyuziti', 'CP1250', ';');
+$pouzitiPozemku = importujCsv($db, __DIR__ . '/../data/SC_ZP_VYUZITI_POZ.csv', 'zpusoby_vyuziti', 'CP1250', ';');
 $katastralniUzemi = importujCsv($db, __DIR__ . '/../data/katastralni_uzemi.csv', 'katastralni_uzemi', 'UTF-8', ',');
 echo "druhy_pozemku: $druhyPozemku\n";
 echo "pouziti_pozemku: $pouzitiPozemku\n";
