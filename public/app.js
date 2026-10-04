@@ -113,18 +113,22 @@ function zobrazDetail(misto, parcela) {
     const obsah = document.createElement('div');
     obsah.appendChild(document.createElement('strong')).textContent = `Parcela ${parcela.cislo}`;
     obsah.appendChild(tabulka);
+
     const odkaz = obsah.appendChild(document.createElement('a'));
     odkaz.href = `${NAHLIZENI_DO_KN}?${new URLSearchParams({ typ: 'parcela', id: parcela.id })}`;
     odkaz.target = '_blank';
     odkaz.rel = 'noopener';
     odkaz.textContent = 'Zobrazit v Nahlížení do KN (vlastníci, LV)';
+
     L.popup().setLatLng(misto).setContent(obsah).openOn(mapa);
+
     vrstvaVybrane.clearLayers();
     vrstvaVybrane.addData(parcela.geometrie);
 }
 
 async function nactiDetail(udalost) {
     vrstvaVybrane.clearLayers();
+
     const parametry = new URLSearchParams({
         akce: 'detail',
         lon: udalost.latlng.lng,

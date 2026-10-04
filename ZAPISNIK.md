@@ -153,6 +153,14 @@ Nakonec jsem napsal `scripts/stahni.php`, který stáhne data obce i číselník
 
 ČÚZK vydává data vždy k poslednímu dni měsíce, takže skript zkusí minulý měsíc, a když tam soubor ještě není, jde až tři měsíce zpátky. Stahování jsem nedal do importu, protože mezi nimi je převod přes `ogr2ogr` a import pouštím mnohem častěji, než potřebuju stahovat nová data.
 
+## 4. 10. – Useknuté odpovědi serveru
+
+Při závěrečné kontrole jsem si všiml, že některé požadavky na parcely trvají 19 sekund místo desítek milisekund. Nejdřív jsem to považoval za chybu testu, ale když jsem to zkoušel opakovaně, zjistil jsem, že vestavěný server PHP na Windows občas velkou odpověď nedopíše, chvíli čeká a pak spojení zavře. Prohlížeč pak dostal nekompletní JSON a parcely se nenakreslily.
+
+Že to není můj kód, jsem ověřil souborem, který jen vypíše 2,5 MB písmen – choval se stejně. Pomohlo posílat odpověď po kouscích o 8 kB. Ze 40 pokusů pak prošlo všech 40 celých. Na skutečném serveru (Apache, nginx) by tohle nebylo potřeba.
+
+Při té kontrole jsem našel ještě jednu chybu: když někdo poslal `akce` jako pole (`akce[]=detail`), PHP vypsalo varování i s cestou k souboru na disku. Teď API kontroluje, že jde o text.
+
 ## Co bych dělal s víc časem
 
 - **Celý okres:** vektorové dlaždice z PostGIS s cache. Každá dlaždice se načte jednou a parcely by šly ukázat i na menším přiblížení.

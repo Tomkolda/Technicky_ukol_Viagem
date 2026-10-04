@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS parcely (
     vymera INTEGER NOT NULL,
     druh_pozemku_kod INTEGER NOT NULL,
     zpusob_vyuziti_kod INTEGER,
-    geometrie TEXT,
+    geometrie TEXT NOT NULL,
     min_lon REAL NOT NULL,
     min_lat REAL NOT NULL,
     max_lon REAL NOT NULL,

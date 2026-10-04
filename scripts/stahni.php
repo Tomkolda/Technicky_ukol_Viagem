@@ -13,7 +13,7 @@ function stahni(string $adresa): ?string
     $kontext = stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 60]]);
     $obsah = file_get_contents($adresa, false, $kontext);
 
-    if ($obsah === false || !str_contains($http_response_header[0] ?? '', ' 200 ')) {
+    if ($obsah === false || !str_contains(http_get_last_response_headers()[0] ?? '', ' 200 ')) {
         return null;
     }
 
