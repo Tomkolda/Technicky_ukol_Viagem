@@ -33,6 +33,21 @@ function importujCsv(PDO $db, string $soubor, string $tabulka, string $kodovani,
     return $pocet;   
 }
 
+function spocitejObdelnik(array $geometrie): array
+{
+    $minLon = $geometrie['coordinates'][0][0][0];
+    $minLat = $geometrie['coordinates'][0][0][1];
+    $maxLon = $geometrie['coordinates'][0][0][0];
+    $maxLat = $geometrie['coordinates'][0][0][1];
+    foreach ($geometrie['coordinates'][0] as $bod) {
+        $minLon = min($minLon, $bod[0]);
+        $minLat = min($minLat, $bod[1]);
+        $maxLon = max($maxLon, $bod[0]);
+        $maxLat = max($maxLat, $bod[1]);
+    }
+    return ['min_lon' => $minLon, 'min_lat' => $minLat, 'max_lon' => $maxLon, 'max_lat' => $maxLat];
+}
+
 $config = require __DIR__ . '/../config.php';
 
 $db = pripojDatabazi($config['db_path']);
