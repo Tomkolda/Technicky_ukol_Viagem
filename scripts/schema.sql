@@ -31,4 +31,4 @@ CREATE TABLE IF NOT EXISTS katastralni_uzemi (
     nazev TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_parcely_min_lat_min_lon ON parcely (min_lat, max_lat);
+CREATE INDEX IF NOT EXISTS idx_parcely_min_lat_min_lon ON parcely (min_lat, min_lon);
