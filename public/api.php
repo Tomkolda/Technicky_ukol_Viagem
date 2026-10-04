@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../src/databaze.php';
 require_once __DIR__ . '/../src/parcely.php';
+const MAX_SIRKA_VYREZU = 0.06;
+const MAX_VYSKA_VYREZU = 0.03;
 
-function odpovez(int $kodStavu, array $data): never
+function odpovezJson(int $kodStavu, string $json): never
 {
     http_response_code($kodStavu);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    echo $json;
     exit;
+}
+
+function odpovez(int $kodStavu, array $data): never
+{
+    odpovezJson($kodStavu, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
 }
 
 function nactiCislo(string $nazev, float $min, float $max): float
@@ -23,6 +30,8 @@ function nactiCislo(string $nazev, float $min, float $max): float
 
     return $hodnota;
 }
+
+ob_start('ob_gzhandler');
 
 $config = require __DIR__ . '/../config.php';
 
@@ -41,6 +50,15 @@ try {
 
         odpovez(200, $parcela);
     }
+    
+    if ($akce === 'parcely') {
+    $zapad = nactiCislo('zapad', -180, 180);
+    $jih = nactiCislo('jih', -90, 90);
+    $vychod = nactiCislo('vychod', $zapad, $zapad + MAX_SIRKA_VYREZU);
+    $sever = nactiCislo('sever', $jih, $jih + MAX_VYSKA_VYREZU);
+
+    odpovezJson(200, sestavGeoJsonVyrezu($db, $zapad, $jih, $vychod, $sever));
+}
 
     odpovez(400, ['chyba' => "Neznámá akce '$akce'"]);
 } catch (InvalidArgumentException $e) {

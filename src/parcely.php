@@ -59,3 +59,31 @@ function najdiParceluVBode(PDO $db, float $lon, float $lat): ?array
 
     return null;
 }
+
+function sestavGeoJsonVyrezu(PDO $db, float $zapad, float $jih, float $vychod, float $sever): string
+{
+    $prikaz = $db->prepare(
+        'SELECT id, druh_cislovani, kmenove_cislo, pododdeleni, geometrie
+         FROM parcely
+         WHERE min_lon <= :vychod AND max_lon >= :zapad
+           AND min_lat <= :sever AND max_lat >= :jih'
+    );
+    $prikaz->execute([':zapad' => $zapad, ':jih' => $jih, ':vychod' => $vychod, ':sever' => $sever]);
+
+    $prvky = [];
+    foreach ($prikaz->fetchAll(PDO::FETCH_ASSOC) as $parcela) {
+        $vlastnosti = [
+            'cislo' => sestavCisloParcely(
+                (int) $parcela['druh_cislovani'],
+                (int) $parcela['kmenove_cislo'],
+                $parcela['pododdeleni'] !== null ? (int) $parcela['pododdeleni'] : null
+            ),
+        ];
+
+        $prvky[] = '{"type":"Feature","id":' . (int) $parcela['id']
+            . ',"properties":' . json_encode($vlastnosti, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)
+            . ',"geometry":' . $parcela['geometrie'] . '}';
+    }
+
+    return '{"type":"FeatureCollection","features":[' . implode(',', $prvky) . ']}';
+}
