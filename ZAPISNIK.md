@@ -126,3 +126,19 @@ Schéma je v `scripts/schema.sql`. Tabulky:
 **Číselníky – každý ve vlastní tabulce:** původně jsem je dal do jedné tabulky, ale jsou to tři nezávislé seznamy s různým počtem položek, takže by jeden řádek míchal nesouvisející údaje (normalizace). Primárním klíčem je přímo `kod`, takže se kód nemůže opakovat.
 
 **Číslo parcely skládám v PHP, neukládám ho:** je odvozené z `druh_cislovani`, `kmenove_cislo` a `pododdeleni`. 
+
+# Import do SQLite a transakce
+Import je ve `scripts/import.php`: smaže starou databázi, vytvoří tabulky ze `schema.sql`, naimportuje číselníky (CSV) a parcely (GeoJSON z `prevod.bat`).
+Výsledek: 11 druhů pozemku, 30 způsobů využití, 5 katastrálních území, 16 953 parcel.
+**Měření rychlosti:**
+| Varianta | Čas |
+|---|---|
+| bez transakce | ~45 s |
+| s transakcí | 0,5 s |
+**Proč:** bez transakce SQLite bere každý INSERT jako samostatnou transakci a po každém čeká, až disk potvrdí zápis, tedy 16 953× čekání na disk. S transakcí se zapisuje jednou na konci.
+**Výhoda navíc:** když import uprostřed selže, neuloží se nic a databáze nezůstane napůl naplněná.
+**Co mě překvapilo:**
+- číselníky ČÚZK jsou v kódování Windows-1250 se středníkem, kdežto CSV z ogr2ogr je v UTF-8 s čárkou. `mb_convert_encoding` Windows-1250 nezná, funguje `iconv`.
+- `ogr2ogr` u chybějících hodnot (poddělení, způsob využití) klíč v GeoJSON úplně vynechá, proto `?? null`.
+- skript „úspěšně“ doběhl i se špatnými daty (záhlaví CSV uložené jako řádek s kódem 0, druhy pozemku místo způsobů využití). Počty řádků je potřeba kontrolovat proti očekávání, ne jen sledovat, jestli skript nespadl.
+**Limit:** soubory GeoJSON se načítají celé do paměti (`json_decode`). Pro 5 k. ú. (9 MB) to nevadí, pro celý okres by bylo potřeba číst soubor postupně.
